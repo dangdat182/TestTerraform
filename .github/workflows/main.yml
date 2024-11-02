@@ -51,7 +51,8 @@ jobs:
         run: terraform apply terraform.plan
       
       - name: Set Cluster Name Output
-        run: echo "CLUSTER_NAME=$(terraform output -raw cluster_name | tr -d '\r')" >> $GITHUB_ENV
+        run: echo "CLUSTER_NAME=$(terraform output -raw cluster_name | tr -d '\r' | tr -d '\n')" >> $GITHUB_ENV
+
       
       - name: Update kubeconfig for EKS
         run: aws eks update-kubeconfig --name $CLUSTER_NAME  
