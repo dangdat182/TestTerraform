@@ -44,14 +44,17 @@ jobs:
         run: terraform init -upgrade
 
       - name: Plan Terraform
-        run: terraform plan -out terraform.plan
+        run: terraform plan -out=terraform.plan
 
-      - name: Apply Terraform
+      - name: Apply Terraform (only if changes are detected)
+        if: ${{ steps.plan.outputs.changes }}
         run: terraform apply terraform.plan
       
-      - name: Get Cluster Name
-        id: cluster_name
-        run: echo "::set-output name=name::$(terraform output -raw cluster_name)"  
+      - name: Set Cluster Name Output
+        run: echo "CLUSTER_NAME=$(terraform output -raw cluster_name)" >> $GITHUB_ENV
+      
+      - name: Update kubeconfig for EKS
+        run: aws eks update-kubeconfig --name $CLUSTER_NAME  
 
       - name: Update kubeconfig for EKS
         run: aws eks update-kubeconfig --name ${{ steps.cluster_name.outputs.name }}
