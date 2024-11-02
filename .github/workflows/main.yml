@@ -48,9 +48,13 @@ jobs:
 
       - name: Apply Terraform
         run: terraform apply terraform.plan
+      
+      - name: Get Cluster Name
+        id: cluster_name
+        run: echo "::set-output name=name::$(terraform output -raw cluster_name)"  
 
       - name: Update kubeconfig for EKS
-        run: aws eks update-kubeconfig --name $(terraform output -raw cluster_name)
+        run: aws eks update-kubeconfig --name ${{ steps.cluster_name.outputs.name }}
 
       - name: Verify EKS Nodes
         run: kubectl get nodes -o custom-columns=Name:.metadata.name,nCPU:.status.capacity.cpu,Memory:.status.capacity.memory
