@@ -53,7 +53,8 @@ jobs:
       - name: Output EKS Cluster Name
         id: eks
         run: |
-          echo "EKS_CLUSTER_NAME=$(terraform output -raw cluster_name | tr -d '\r')" >> $GITHUB_ENV
+          EKS_CLUSTER_NAME=$(terraform output -raw cluster_name | tr '\n' ' ')
+          echo "EKS_CLUSTER_NAME=$EKS_CLUSTER_NAME" >> $GITHUB_ENV
 
       
       - name: Update kubeconfig for EKS
