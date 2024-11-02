@@ -1,0 +1,59 @@
+name: EKS Cluster Provisioning
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  provision-eks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Install AWS CLI
+        run: |
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip awscliv2.zip
+          sudo ./aws/install
+
+      - name: Install kubectl
+        run: |
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+          
+      - name: Install Terraform
+        run: |
+          curl -Lo terraform.zip https://releases.hashicorp.com/terraform/1.5.6/terraform_1.5.6_linux_amd64.zip
+          unzip terraform.zip
+          sudo mv terraform /usr/local/bin/
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Initialize Terraform
+        run: terraform init -upgrade
+
+      - name: Plan Terraform
+        run: terraform plan -out terraform.plan
+
+      - name: Apply Terraform
+        run: terraform apply terraform.plan
+
+      - name: Update kubeconfig for EKS
+        run: aws eks update-kubeconfig --name $(terraform output -raw cluster_name)
+
+      - name: Verify EKS Nodes
+        run: kubectl get nodes -o custom-columns=Name:.metadata.name,nCPU:.status.capacity.cpu,Memory:.status.capacity.memory
+
+      - name: Apply Kubernetes Configurations
+        run: kubectl apply -f k8s-specifications/
