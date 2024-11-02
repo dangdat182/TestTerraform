@@ -50,12 +50,13 @@ jobs:
         if: ${{ steps.plan.outputs.changes }}
         run: terraform apply terraform.plan
       
-      - name: Set Cluster Name Output
-        run: echo "CLUSTER_NAME=$(terraform output -raw cluster_name | tr -d '\r' | tr -d '\n')" >> $GITHUB_ENV
+      - name: Output EKS Cluster Name
+        id: eks
+        run: echo "EKS_CLUSTER_NAME=$(terraform output -raw cluster_name)" >> $GITHUB_ENV
 
       
       - name: Update kubeconfig for EKS
-        run: aws eks update-kubeconfig --name $CLUSTER_NAME  
+        run: aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }}  
 
       - name: Verify EKS Nodes
         run: kubectl get nodes -o custom-columns=Name:.metadata.name,nCPU:.status.capacity.cpu,Memory:.status.capacity.memory
