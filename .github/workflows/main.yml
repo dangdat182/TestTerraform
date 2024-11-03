@@ -94,7 +94,7 @@ jobs:
 
       - name: Update kubeconfig for EKS (only if new cluster created or changes detected)
         if: env.changes == 'true' || env.output_exists == 'false'
-        run: aws eks --region us-east-2 update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }}
+        run: aws eks --region us-east-1 update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }}
 
  
       - name: Verify EKS Nodes
