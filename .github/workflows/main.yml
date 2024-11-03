@@ -44,26 +44,24 @@ jobs:
         run: terraform init -upgrade
 
       - name: Plan Terraform
-        id: tf_plan
-        run: |
-          terraform plan -out=terraform.plan || exit_code=$?
-          echo "plan_exit_code=$exit_code" >> $GITHUB_ENV
+        run: terraform plan -out=terraform.plan
 
       - name: Apply Terraform (only if changes are detected)
-        if: env.plan_exit_code == '2'
-        run: terraform apply -auto-approve terraform.plan
-
-      - name: Output EKS Cluster Name
-        if: env.plan_exit_code == '2'
-        id: eks
-        run: |
-          EKS_CLUSTER_NAME=$(terraform output -raw cluster_name)
-          echo "EKS_CLUSTER_NAME=$EKS_CLUSTER_NAME" >> $GITHUB_ENV
+        if: ${{ steps.plan.outputs.changes == 'true' }}
+        run: terraform apply terraform.plan
+      
+      # - name: Output EKS Cluster Name
+      #   id: eks
+      #   run: |
+      #     EKS_CLUSTER_NAME=$(terraform output -raw cluster_name | tr '\n' ' ')
+      #     echo "EKS_CLUSTER_NAME=$EKS_CLUSTER_NAME" >> $GITHUB_ENV
 
       - name: Update kubeconfig for EKS
-        if: env.plan_exit_code == '2'
-        run: aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }}
-  
+        #if: ${{ steps.plan.outputs.changes }}
+        run: |
+          EKS_CLUSTER_NAME=$(aws eks list-clusters --query "clusters[0]" --output text)
+          aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }}  
+ 
       - name: Verify EKS Nodes
         run: kubectl get nodes -o custom-columns=Name:.metadata.name,nCPU:.status.capacity.cpu,Memory:.status.capacity.memory
 
