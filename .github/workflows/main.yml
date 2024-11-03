@@ -40,11 +40,13 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
+      
+
+      - name: Initialize Terraform
+        run: terraform init -upgrade
+      
       - name: terraform destroy
         run: terraform destroy
-
-#       - name: Initialize Terraform
-#         run: terraform init -upgrade
 
 #       - name: Plan Terraform
 #         run: terraform plan -out=terraform.plan
