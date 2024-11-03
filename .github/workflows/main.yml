@@ -40,30 +40,31 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      - name: Initialize Terraform
-        run: terraform init -upgrade
+      - name: terraform destroy
+        run: terraform destroy
 
-      - name: Plan Terraform
-        run: terraform plan -out=terraform.plan
+#       - name: Initialize Terraform
+#         run: terraform init -upgrade
 
-      - name: Apply Terraform (only if changes are detected)
-        if: ${{ steps.plan.outputs.changes == 'true' }}
-        run: terraform apply terraform.plan
+#       - name: Plan Terraform
+#         run: terraform plan -out=terraform.plan
+
+#       - name: Apply Terraform (only if changes are detected)
+#         #if: ${{ steps.plan.outputs.changes == 'true' }}
+#         run: terraform apply terraform.plan
       
-      # - name: Output EKS Cluster Name
-      #   id: eks
-      #   run: |
-      #     EKS_CLUSTER_NAME=$(terraform output -raw cluster_name | tr '\n' ' ')
-      #     echo "EKS_CLUSTER_NAME=$EKS_CLUSTER_NAME" >> $GITHUB_ENV
+#       - name: Output EKS Cluster Name
+#         id: eks
+#         run: |
+#           EKS_CLUSTER_NAME=$(terraform output -raw cluster_name | tr '\n' ' ')
+#           echo "EKS_CLUSTER_NAME=$EKS_CLUSTER_NAME" >> $GITHUB_ENV
 
-      - name: Update kubeconfig for EKS
-        #if: ${{ steps.plan.outputs.changes }}
-        run: |
-          EKS_CLUSTER_NAME=$(aws eks list-clusters --query "clusters[0]" --output text)
-          aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }}  
+#       - name: Update kubeconfig for EKS
+#         if: ${{ steps.plan.outputs.changes }}
+#         run: aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }}  
  
-      - name: Verify EKS Nodes
-        run: kubectl get nodes -o custom-columns=Name:.metadata.name,nCPU:.status.capacity.cpu,Memory:.status.capacity.memory
+#       - name: Verify EKS Nodes
+#         run: kubectl get nodes -o custom-columns=Name:.metadata.name,nCPU:.status.capacity.cpu,Memory:.status.capacity.memory
 
-      - name: Apply Kubernetes Configurations
-        run: kubectl apply -f k8s-specifications/
+#       - name: Apply Kubernetes Configurations
+#         run: kubectl apply -f k8s-specifications/
