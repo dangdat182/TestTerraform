@@ -47,7 +47,7 @@ jobs:
         run: terraform plan -out=terraform.plan
 
       - name: Apply Terraform (only if changes are detected)
-        if: ${{ steps.plan.outputs.changes == 'true' }}
+        # if: ${{ steps.plan.outputs.changes == 'true' }}
         run: terraform apply terraform.plan
       
       - name: Output EKS Cluster Name
