@@ -47,7 +47,7 @@ jobs:
         run: terraform plan -out=terraform.plan
 
       - name: Apply Terraform (only if changes are detected)
-        #if: ${{ steps.plan.outputs.changes == 'true' }}
+        if: ${{ steps.plan.outputs.changes == 'true' }}
         run: terraform apply terraform.plan
       
       # - name: Output EKS Cluster Name
@@ -100,7 +100,10 @@ jobs:
         run: kubectl get nodes -o custom-columns=Name:.metadata.name,nCPU:.status.capacity.cpu,Memory:.status.capacity.memory
 
       - name: Apply Kubernetes Configurations
-        run: kubectl apply -f k8s-specifications/
+        run: |
+          kubectl apply -f k8s-specifications/
+          kubectl get nodes -o wide
+          kubectl get all
 
       # - name: terraform destroy
       #   run: terraform destroy
